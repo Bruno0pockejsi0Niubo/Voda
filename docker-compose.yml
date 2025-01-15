@@ -1,0 +1,51 @@
+version: '3.8'
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: water_nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./php/public:/var/www/html
+    ports:
+      - "8080:80"
+    depends_on:
+      - php
+      - nodejs
+
+  php:
+    build: 
+      context: ./php
+      dockerfile: Dockerfile
+    container_name: water_php
+    volumes:
+      - ./php:/var/www/html
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASS=secret
+      - DB_NAME=water_consumption
+
+  nodejs:
+    build:
+      context: ./nodejs
+      dockerfile: Dockerfile
+    container_name: water_nodejs
+    volumes:
+      - ./nodejs:/usr/src/app
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASS=secret
+      - DB_NAME=water_consumption
+
+  db:
+    image: mysql:8
+    container_name: water_db
+    environment:
+      - MYSQL_DATABASE=water_consumption
+      - MYSQL_ROOT_PASSWORD=secret
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
